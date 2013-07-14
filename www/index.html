@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+     KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <meta name="format-detection" content="telephone=no" />
+        <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
+        <link rel="stylesheet" type="text/css" href="css/index.css" />
+        <script>
+            
+            // Set this up for later
+            //var location;
+            var gMapsBaseUrl = 'http://maps.google.com/maps?q=loc:';
+            
+            // Wait for the device APIs to be ready
+            document.addEventListener("deviceready", onDeviceReady, false);
+            
+            // When the device APIs are online, let's get the location
+            function onDeviceReady() {
+                //findLocation();
+                // @TODO Find some way to enable the functions when the device is ready
+            }
+            
+            function findLocation() {
+                navigator.geolocation.getCurrentPosition(onGetLocationSuccess, onGetLocationError, {
+                    enableHighAccuracy: true, // Get an accurate result, weirdness though
+                    maximumAge: 3000, // Require a location with at most 3s out of date
+                    timeout: 7000 // Wait up to 7 seconds for the location
+                });
+            }
+            
+            // On success
+            function onGetLocationSuccess(position) {
+                
+                // Save the returned position
+                window.localStorage.setItem('last_position', JSON.stringify(position));
+                
+                var status = document.getElementById('status');
+                status.innerHTML = 'Location found: ' + position.coords.latitude + ', ' + position.coords.longitude + ' with accuracy ' + position.coords.accuracy + '.';
+            }
+            
+            // On error
+            function onGetLocationError(error) {
+                alert('Error getting location' + error.code + ': ' + error.message);
+            }
+            
+            // Find and store our location
+            function park() {
+                var status = document.getElementById('status');
+                status.innerHTML = 'searching';
+                findLocation();
+            }
+            
+            // Show our location on a map
+            function find() {
+                
+                // Retrieve our last position
+                var position = JSON.parse(window.localStorage.getItem('last_position'));
+                
+                // Tell the user how long ago they parked
+                timeDiff = Math.round((Date.now() - position.timestamp)/1000);
+                navigator.notification.confirm('Location saved ' + timeDiff + 's ago. Map it?', function(buttonIndex){
+                    // If the user chose Yes, button 1
+                    if (buttonIndex == 1) {
+                        // Redirect to a google maps link
+                        window.open(gMapsBaseUrl + position.coords.latitude + ',' + position.coords.longitude, '_system');
+                    }
+                }, 'Map it?', 'Yes,No');
+                
+                
+                //window.open(document.getElementById('mapUrl').innerHTML, '_system');
+                
+            }
+            
+        </script>
+        <title>Find My Car</title>
+    </head>
+    <body>
+        <div class="app">
+            <div id="park" onclick="park();">park</div>
+            <div id="find" onclick="find();">find</div>
+            <div id="status">Waiting...</div>
+            <br>
+            <div id="footer">Created by <a onclick="window.open('http://www.callum-macdonald.com/', '_system');" href="#" target="_system">Callum Macdonald</a></div>
+            <div id="debug" onclick="alert(window.localStorage.getItem('last_position'));">retrieve last position</div>
+        </div>
+        <script type="text/javascript" src="cordova.js"></script>
+        <script type="text/javascript" src="js/index.js"></script>
+        <script type="text/javascript">
+            app.initialize();
+        </script>
+    </body>
+</html>
