@@ -1,6 +1,11 @@
-// Set this up for later
-//var location;
+// The required accuracy
+var requiredAccuracy = 15;
+
+// Append the coords onto a google maps url
 var gMapsBaseUrl = 'http://maps.google.com/maps?q=loc:';
+
+// The watchPosition id for clearWatch
+var watchId = null;
 
 // Wait for the device APIs to be ready
 document.addEventListener("deviceready", onDeviceReady, false);
@@ -12,18 +17,23 @@ function onDeviceReady() {
 }
 
 function findLocation() {
-    navigator.geolocation.getCurrentPosition(onGetLocationSuccess, onGetLocationError, {
+    watchId = navigator.geolocation.watchPosition(onGetLocationSuccess, onGetLocationError, {
         enableHighAccuracy: true, // Get an accurate result, weirdness though
         maximumAge: 3000, // Require a location with at most 3s out of date
-        timeout: 7000 // Wait up to 7 seconds for the location
+        timeout: 90000 // Wait up to 90 seconds for the location
     });
 }
 
 // On success
 function onGetLocationSuccess(position) {
     
-    // Save the returned position
-    window.localStorage.setItem('last_position', JSON.stringify(position));
+    // This gets called every time the location is found, check accuracy
+    if (position.coords.accuracy < requiredAccuracy) {
+        // Clear the watch
+        navigator.geolocation.clearWatch(watchId);
+        // Save the position
+        window.localStorage.setItem('last_position', JSON.stringify(position));
+    }
     
     var status = document.getElementById('status');
     status.innerHTML = 'Location found: ' + position.coords.latitude + ', ' + position.coords.longitude + ' with accuracy ' + position.coords.accuracy + '.';
